@@ -189,9 +189,9 @@ class Module
           "def #{method_prefix}#{method}(#{definition})",
           "_ = #{to}",
           "if !_.nil? || nil.respond_to?(:#{method})",
-          "  instance_variable_get("@_memoize_delegate_#{to}_#{method}") ? ",
-          "  instance_variable_get("@_memoize_delegate_#{to}_#{method}") : ",
-          "  instance_variable_set("@_memoize_delegate_#{to}_#{method}", _.#{method}(#{definition}))",
+          "  instance_variable_get('@_memoize_delegate_#{to}_#{method}') ? ",
+          "  instance_variable_get('@_memoize_delegate_#{to}_#{method}') : ",
+          "  instance_variable_set('@_memoize_delegate_#{to}_#{method}', _.#{method}(#{definition}))",
           "end",
         "end"
         ].join ';'
@@ -201,9 +201,9 @@ class Module
         method_def = [
           "def #{method_prefix}#{method}(#{definition})",
           " _ = #{to}",
-          "  instance_variable_get("@_memoize_delegate_#{to}_#{method}") ? ",
-          "  instance_variable_get("@_memoize_delegate_#{to}_#{method}") : ",
-          "  instance_variable_set("@_memoize_delegate_#{to}_#{method}", _.#{method}(#{definition}))",
+          "  instance_variable_get('@_memoize_delegate_#{to}_#{method}') ? ",
+          "  instance_variable_get('@_memoize_delegate_#{to}_#{method}') : ",
+          "  instance_variable_set('@_memoize_delegate_#{to}_#{method}', _.#{method}(#{definition}))",
           "rescue NoMethodError => e",
           "  if _.nil? && e.name == :#{method}",
           "    #{exception}",
