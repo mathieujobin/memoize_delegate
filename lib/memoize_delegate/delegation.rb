@@ -5,10 +5,12 @@ class Module
   # option is not used.
   class DelegationError < NoMethodError; end
 
-  RUBY_RESERVED_WORDS = Set.new(
-    %w(alias and BEGIN begin break case class def defined? do else elsif END
-       end ensure false for if in module next nil not or redo rescue retry
-       return self super then true undef unless until when while yield)
+  RUBY_RESERVED_KEYWORDS = %w(alias and BEGIN begin break case class def defined? do
+  else elsif END end ensure false for if in module next nil not or redo rescue retry
+  return self super then true undef unless until when while yield)
+  DELEGATION_RESERVED_KEYWORDS = %w(_ arg args block)
+  DELEGATION_RESERVED_METHOD_NAMES = Set.new(
+    RUBY_RESERVED_KEYWORDS + DELEGATION_RESERVED_KEYWORDS
   ).freeze
 
   # Provides a +delegate+ class method to easily expose contained objects'
@@ -17,7 +19,7 @@ class Module
   # ==== Options
   # * <tt>:to</tt> - Specifies the target object
   # * <tt>:prefix</tt> - Prefixes the new method with the target name or a custom prefix
-  # * <tt>:allow_nil</tt> - if set to true, prevents a +NoMethodError+ to be raised
+  # * <tt>:allow_nil</tt> - if set to true, prevents a +NoMethodError+ from being raised
   #
   # The macro receives one or more method names (specified as symbols or
   # strings) and the name of the target object via the <tt>:to</tt> option
@@ -148,13 +150,10 @@ class Module
   #
   # The target method must be public, otherwise it will raise +NoMethodError+.
   #
-  def delegate(*methods)
-    options = methods.pop
-    unless options.is_a?(Hash) && to = options[:to]
+  def delegate(*methods, to: nil, prefix: nil, allow_nil: nil)
+    unless to
       raise ArgumentError, 'Delegation needs a target. Supply an options hash with a :to key as the last argument (e.g. delegate :hello, to: :greeter).'
     end
-
-    prefix, allow_nil = options.values_at(:prefix, :allow_nil)
 
     if prefix == true && to =~ /^[^a-z_]/
       raise ArgumentError, 'Can only automatically set the delegation prefix when delegating to a method.'
@@ -167,11 +166,11 @@ class Module
         ''
       end
 
-    file, line = caller.first.split(':', 2)
-    line = line.to_i
+    location = caller_locations(1, 1).first
+    file, line = location.path, location.lineno
 
     to = to.to_s
-    to = "self.#{to}" if RUBY_RESERVED_WORDS.include?(to)
+    to = "self.#{to}" if DELEGATION_RESERVED_METHOD_NAMES.include?(to)
 
     methods.each do |method|
       # Attribute writer methods only accept one argument. Makes sure []=
